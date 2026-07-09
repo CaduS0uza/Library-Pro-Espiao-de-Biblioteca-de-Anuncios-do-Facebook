@@ -1,0 +1,18 @@
+# deps
+node_modules/
+
+# segredos / ambiente (NUNCA versionar)
+.env
+.env.*
+!.env.example
+.vercel
+.vercel/
+.netlify/
+*.pem
+*.key
+
+# temporarios
+.vercel-env.tmp
+scratch-*.mjs
+.DS_Store
+npm-debug.log*

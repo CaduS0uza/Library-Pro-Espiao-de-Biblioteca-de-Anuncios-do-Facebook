@@ -1,0 +1,10 @@
+# Config Netlify — site estático + funções serverless (ponte com o Apify)
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# /api/start e /api/result caem nas funções (mesma rota do servidor local)
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200

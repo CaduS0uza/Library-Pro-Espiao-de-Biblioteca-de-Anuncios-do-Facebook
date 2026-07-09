@@ -1,0 +1,41 @@
+<!-- Template de e-mail do libpro (cole no EmailJS → Email Templates → Content → edit code).
+     Variáveis usadas: {{code}} (o código) e {{email}} (destinatário, no campo "To Email"). -->
+<div style="margin:0;padding:0;background:#0b1220;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b1220;padding:32px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    <tr><td align="center">
+      <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:#0b1220;">
+        <tr><td style="padding:8px 36px 0 36px;">
+
+          <!-- logo -->
+          <div style="font-size:24px;font-weight:800;color:#e7ecf5;margin-bottom:22px;">
+            <span style="color:#fbbf24;">⚡</span> libpro
+          </div>
+
+          <h1 style="color:#ffffff;font-size:22px;font-weight:800;margin:0 0 14px 0;">Código de Verificação</h1>
+
+          <p style="color:#9aa6bd;font-size:14px;line-height:1.6;margin:0 0 24px 0;">
+            Use o código abaixo para confirmar sua identidade na plataforma
+            <span style="color:#cdd8ee;font-weight:600;">libpro</span>. O código expira em <b style="color:#cdd8ee;">10 minutos</b>.
+          </p>
+
+          <!-- caixa do código -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                 style="background:#121a2b;border:1px solid #22304d;border-radius:14px;">
+            <tr><td align="center" style="padding:28px 20px;">
+              <div style="color:#8da2c4;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Seu código</div>
+              <div style="color:#3b82f6;font-size:42px;font-weight:800;letter-spacing:10px;font-family:ui-monospace,'SF Mono',Menlo,monospace;">{{code}}</div>
+            </td></tr>
+          </table>
+
+          <p style="color:#6b7a96;font-size:12.5px;line-height:1.6;margin:24px 0 0 0;">
+            Se você não solicitou este código, ignore este e-mail com segurança. Nenhuma ação será necessária.
+          </p>
+
+          <hr style="border:none;border-top:1px solid #1b2740;margin:24px 0;" />
+          <p style="color:#4b5870;font-size:11.5px;margin:0;">© libpro · Todos os direitos reservados</p>
+
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</div>
