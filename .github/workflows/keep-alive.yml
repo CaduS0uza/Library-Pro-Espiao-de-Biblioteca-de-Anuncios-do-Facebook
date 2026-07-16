@@ -1,0 +1,31 @@
+name: keep-alive (Supabase)
+
+# Mantém o projeto Supabase do LibPro ATIVO pra não pausar por inatividade
+# (plano free pausa após ~7 dias sem atividade). Roda a cada 2 dias na infra do
+# GitHub (grátis) e faz uma leitura mínima no banco via REST — independente do
+# Netlify/Vercel (que estão fora do ar / com quota estourada).
+on:
+  schedule:
+    - cron: "17 9 */2 * *" # a cada 2 dias, 09:17 UTC
+  workflow_dispatch: {} # dispara manualmente pra testar
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cutuca o banco (SELECT mínimo = atividade que evita a pausa)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "::error::defina os secrets SUPABASE_URL e SUPABASE_KEY no repo"; exit 1
+          fi
+          # /rest/v1/ com apikey obriga o PostgREST a conectar no banco = atividade real.
+          code=$(curl -s -o /tmp/r.txt -w '%{http_code}' --max-time 30 \
+            "$SUPABASE_URL/rest/v1/" \
+            -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY")
+          echo "HTTP $code"
+          # 200 (schema) ou 401/404 já provam que o gateway->banco respondeu; 000/5xx = problema
+          echo "$code" | grep -qE '^(2|4)' || { echo "::error::banco não respondeu (HTTP $code)"; exit 1; }
+          echo "ok — banco ativo, pausa evitada"
