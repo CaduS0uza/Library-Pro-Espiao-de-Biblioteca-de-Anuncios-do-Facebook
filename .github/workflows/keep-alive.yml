@@ -2,8 +2,11 @@ name: keep-alive (Supabase)
 
 # Mantém o projeto Supabase do LibPro ATIVO pra não pausar por inatividade
 # (plano free pausa após ~7 dias sem atividade). Roda a cada 2 dias na infra do
-# GitHub (grátis) e faz uma leitura mínima no banco via REST — independente do
-# Netlify/Vercel (que estão fora do ar / com quota estourada).
+# GitHub e faz uma leitura mínima no banco via REST — independente do Vercel.
+#
+# Ele NÃO funciona sem os secrets SUPABASE_URL e SUPABASE_KEY no repositório.
+# Entre 17/07 e 17/08/2026 rodou 17 vezes e falhou 17, porque os secrets nunca
+# foram cadastrados — foi assim que o banco pausou e o login parou de entrar.
 on:
   schedule:
     - cron: "17 9 */2 * *" # a cada 2 dias, 09:17 UTC
@@ -13,19 +16,26 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Cutuca o banco (SELECT mínimo = atividade que evita a pausa)
+      - name: Cutuca o banco (SELECT numa tabela real = atividade que evita a pausa)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
-          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+          set -u
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_KEY:-}" ]; then
             echo "::error::defina os secrets SUPABASE_URL e SUPABASE_KEY no repo"; exit 1
           fi
-          # /rest/v1/ com apikey obriga o PostgREST a conectar no banco = atividade real.
+          # Consulta uma tabela de verdade: obriga o PostgREST a abrir conexão no
+          # Postgres. RLS bloqueia as linhas pra chave anon, então volta 200 [] —
+          # atividade real no banco, zero dado exposto.
           code=$(curl -s -o /tmp/r.txt -w '%{http_code}' --max-time 30 \
-            "$SUPABASE_URL/rest/v1/" \
+            "$SUPABASE_URL/rest/v1/app_users?select=email&limit=1" \
             -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY")
           echo "HTTP $code"
-          # 200 (schema) ou 401/404 já provam que o gateway->banco respondeu; 000/5xx = problema
+          head -c 300 /tmp/r.txt; echo
+          # 000 = DNS não resolve => projeto PAUSADO ou apagado. 5xx = banco caído.
+          if [ "$code" = "000" ]; then
+            echo "::error::o host não respondeu — projeto Supabase provavelmente PAUSADO. Restaure no dashboard."; exit 1
+          fi
           echo "$code" | grep -qE '^(2|4)' || { echo "::error::banco não respondeu (HTTP $code)"; exit 1; }
           echo "ok — banco ativo, pausa evitada"

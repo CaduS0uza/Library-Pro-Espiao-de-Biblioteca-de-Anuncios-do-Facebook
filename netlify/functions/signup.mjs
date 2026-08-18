@@ -1,4 +1,5 @@
 import { ensureAdmin, signup } from "../../lib/store.mjs";
+import { errorResponse, isDbDown } from "../../lib/errors.mjs";
 
 const j = (statusCode, obj) => ({ statusCode, headers: { "Content-Type": "application/json" }, body: JSON.stringify(obj) });
 const emailOk = (e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);
@@ -13,6 +14,7 @@ export const handler = async (event) => {
     await signup(email, pass);
     return j(200, { ok: true });
   } catch (e) {
+    if (isDbDown(e)) return errorResponse(e, j);
     return j(400, { ok: false, error: String(e.message || e) });
   }
 };

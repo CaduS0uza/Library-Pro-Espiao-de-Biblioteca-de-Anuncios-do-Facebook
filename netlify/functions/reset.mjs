@@ -1,4 +1,5 @@
 import { ensureAdmin, getResetCode, delResetCode, setPassword } from "../../lib/store.mjs";
+import { errorResponse, isDbDown } from "../../lib/errors.mjs";
 
 const j = (statusCode, obj) => ({ statusCode, headers: { "Content-Type": "application/json" }, body: JSON.stringify(obj) });
 
@@ -16,5 +17,5 @@ export const handler = async (event) => {
     await setPassword(em, pass);
     await delResetCode(em);
     return j(200, { ok: true });
-  } catch (e) { return j(502, { ok: false, error: String(e.message || e) }); }
+  } catch (e) { return isDbDown(e) ? errorResponse(e, j) : j(502, { ok: false, error: String(e.message || e) }); }
 };

@@ -1,5 +1,6 @@
 import { ensureAdmin, userExists, saveResetCode } from "../../lib/store.mjs";
 import { sendCode } from "../../lib/email.mjs";
+import { errorResponse, isDbDown } from "../../lib/errors.mjs";
 
 const j = (statusCode, obj) => ({ statusCode, headers: { "Content-Type": "application/json" }, body: JSON.stringify(obj) });
 
@@ -17,5 +18,5 @@ export const handler = async (event) => {
     }
     // resposta genérica (não revela se o email existe)
     return j(200, { ok: true, msg: "Se o e-mail estiver cadastrado, enviamos um código." });
-  } catch (e) { return j(502, { ok: false, error: String(e.message || e) }); }
+  } catch (e) { return isDbDown(e) ? errorResponse(e, j) : j(502, { ok: false, error: String(e.message || e) }); }
 };

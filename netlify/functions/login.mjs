@@ -1,4 +1,5 @@
 import { ensureAdmin, loginCheck } from "../../lib/store.mjs";
+import { errorResponse, isDbDown } from "../../lib/errors.mjs";
 
 const j = (statusCode, obj) => ({ statusCode, headers: { "Content-Type": "application/json" }, body: JSON.stringify(obj) });
 
@@ -15,5 +16,5 @@ export const handler = async (event) => {
       return j(403, { ok: false, error: m });
     }
     return j(200, { ok: true, role: u.role, email: u.email });
-  } catch (e) { return j(500, { error: String(e.message || e) }); }
+  } catch (e) { return isDbDown(e) ? errorResponse(e, j) : j(500, { error: String(e.message || e) }); }
 };

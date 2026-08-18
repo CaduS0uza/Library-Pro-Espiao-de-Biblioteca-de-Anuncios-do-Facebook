@@ -1,5 +1,6 @@
 import { getUsage } from "../../lib/apify.mjs";
 import { auth, getTokens, addToken, delToken, listUsersFull, addUser, delUser, setStatus, getSearches } from "../../lib/store.mjs";
+import { errorResponse, isDbDown } from "../../lib/errors.mjs";
 
 const j = (statusCode, obj) => ({ statusCode, headers: { "Content-Type": "application/json" }, body: JSON.stringify(obj) });
 const mask = (t) => t ? t.slice(0, 12) + "…" + t.slice(-4) : "";
@@ -51,5 +52,5 @@ export const handler = async (event) => {
       return j(200, { ok: true });
     }
     return j(400, { error: "Ação inválida." });
-  } catch (e) { return j(502, { error: String(e.message || e) }); }
+  } catch (e) { return isDbDown(e) ? errorResponse(e, j) : j(502, { error: String(e.message || e) }); }
 };

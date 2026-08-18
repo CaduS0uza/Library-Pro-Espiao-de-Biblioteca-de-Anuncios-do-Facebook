@@ -1,5 +1,6 @@
 import { startRun, getUsage } from "../../lib/apify.mjs";
 import { auth, getTokens, logSearch, countRecentByUser } from "../../lib/store.mjs";
+import { errorResponse, isDbDown } from "../../lib/errors.mjs";
 
 const j = (statusCode, obj) => ({ statusCode, headers: { "Content-Type": "application/json" }, body: JSON.stringify(obj) });
 
@@ -41,5 +42,5 @@ export const handler = async (event) => {
     await logSearch({ email: user.email, nicho: (p.nicho || "").slice(0, 120), url: p.url, ip: o.ip, ua: o.ua.slice(0, 300), country: o.country, token_label: chosen.label });
 
     return j(200, { ...out, tokenId: chosen.id });
-  } catch (e) { return j(502, { error: String(e.message || e) }); }
+  } catch (e) { return isDbDown(e) ? errorResponse(e, j) : j(502, { error: String(e.message || e) }); }
 };
