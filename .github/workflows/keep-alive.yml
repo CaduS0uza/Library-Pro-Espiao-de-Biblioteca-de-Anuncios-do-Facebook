@@ -33,9 +33,12 @@ jobs:
             -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY")
           echo "HTTP $code"
           head -c 300 /tmp/r.txt; echo
-          # 000 = DNS não resolve => projeto PAUSADO ou apagado. 5xx = banco caído.
-          if [ "$code" = "000" ]; then
-            echo "::error::o host não respondeu — projeto Supabase provavelmente PAUSADO. Restaure no dashboard."; exit 1
-          fi
-          echo "$code" | grep -qE '^(2|4)' || { echo "::error::banco não respondeu (HTTP $code)"; exit 1; }
-          echo "ok — banco ativo, pausa evitada"
+          # Só 200 conta. Um 401 vem do gateway ANTES de tocar o Postgres — daria
+          # verde sem gerar atividade nenhuma, e o projeto pausaria do mesmo jeito.
+          case "$code" in
+            200) echo "ok — banco ativo, pausa evitada" ;;
+            000) echo "::error::host não respondeu — projeto Supabase PAUSADO ou apagado. Restaure no dashboard."; exit 1 ;;
+            401|403) echo "::error::chave recusada (HTTP $code) — o secret SUPABASE_KEY está errado. Use a anon key (eyJ...)."; exit 1 ;;
+            521|522|523|524) echo "::error::gateway de pé mas Postgres fora (HTTP $code) — projeto restaurando ou caído."; exit 1 ;;
+            *) echo "::error::banco não respondeu (HTTP $code)"; exit 1 ;;
+          esac
